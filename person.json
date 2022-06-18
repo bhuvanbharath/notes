@@ -1,0 +1,10 @@
+{
+    "name": "bhuvan",
+    "age": 23,
+    "location": "TamilNadu",
+    "title": [
+        "developer",
+        "solution developer"
+    ],
+    "married": false
+}
