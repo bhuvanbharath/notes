@@ -1,2 +1,2 @@
 # notes
-i dump my learning notes here.
+i dump my Python learning notes here.
