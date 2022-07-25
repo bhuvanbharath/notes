@@ -1,31 +1,44 @@
-from threading import Thread, Lock, current_thread
-from queue import Queue
+from multiprocessing import Process, Value, Array, Lock
+import time
 
-def worker(q, lock):
-    while True:
-        value = q.get() #gets and remove the value from queue
-        
-        with lock:      # prevent printing at the same time with this lock (prevents printing in the same line)
-            print(f"thread: {current_thread().name} got {value}")
+def add_100(number,lock):
+    for _ in range(100):
+        time.sleep(0.1)
+        with lock:
+            number.value+=1
 
-        #For each get(), a subsequent call to task_done() tells the queue that the processing on this item is complete.
-        # If all tasks are done, q.join() can unblock
-        q.task_done() 
+def add_100_array(numbers,lock):
+    for _ in range(100):
+        time.sleep(0.1)
+        with lock:
+            for i in range(len(numbers)):
+                numbers[i]+=1
 
 if __name__ == "__main__":
-    q = Queue()
-    num_threads = 5
+    
+    shared_number = Value('i', 0)   #'i' for integer
+    print("Start:", shared_number.value)
+
+    shared_array = Array('i', [3, 5, 7, 1, 9])
+    print('Start:', shared_array[:])
+
     lock = Lock()
 
-    for i in range (num_threads):
-        thread = Thread(target=worker, args=(q,lock))
-        thread.daemon = True #it is False by default        # dies when the main thread dies
-        thread.start()
+    process1 = Process(target=add_100, args=(shared_number,lock))
+    process2 = Process(target=add_100, args=(shared_number,lock))
 
-    #adding values to the queue
-    for x in range(30):
-        q.put(x)
+    process3 = Process(target=add_100_array, args=(shared_array,lock))
+    process4 = Process(target=add_100_array, args=(shared_array,lock))
 
-    q.join()    #blocks until all the items in the queue have been got and printed
+    process1.start()
+    process2.start()
+    process3.start()
+    process4.start()
 
-    print("end main")
+    process1.join()
+    process2.join()
+    process3.join()
+    process4.join()
+
+    print('end value: ', shared_number.value)
+    print('end value: ', shared_array[:])
